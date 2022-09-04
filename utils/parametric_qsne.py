@@ -5,9 +5,28 @@ from sklearn.metrics import pairwise_distances
 
 from .qsne_utils import _utils
 
+
+
 class ParametricQSNE(object):
-    def __init__(self, model, optimizer, criterion,
-                 q=2.0, perplexity=30., metric="euclidean"):
+    def __init__(
+        self,
+        model,
+        optimizer,
+        criterion,
+        q=2.0,
+        perplexity=30.,
+        metric="euclidean",
+    ):
+        """This is parametric qSNE fitter.
+
+        Args:
+            model: torch model.
+            optimzier: torch optimzier.
+            criterion: classfier criterion.
+            q: Hyperparameter q. Defaults to 2.0.
+            perplexity: Hyperparameter perplexity. Defaults to 30.
+            metric: Metric way.
+        """
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
@@ -15,8 +34,15 @@ class ParametricQSNE(object):
         self.perp = perplexity
         self.metric = metric
         
-    def fit(self, EPOCH, trainloader, validation_mode=True,
-            scheduler=None, device="cuda:0"):
+        
+    def fit(
+        self,
+        EPOCH,
+        trainloader,
+        validation_mode=True,
+        scheduler=None,
+        device="cuda:0",
+    ):
         losses = {"train":[]}
         for epoch in range(EPOCH):
             print(f"epoch{epoch+1}")
@@ -29,13 +55,21 @@ class ParametricQSNE(object):
                 scheduler.step()
         return losses
     
-    def train(self, dataloader, device="cuda:0", metric="euclidean"):
+    
+    def train(
+        self,
+        dataloader,
+        device="cuda:0",
+        metric="euclidean",
+    ):
         device = torch.device(device)
         self. model.train()
         for (inputs, _) in tqdm(dataloader):
             self.optimizer.zero_grad()
-            P = self.joint_probabilities(inputs.view(inputs.shape[0], -1).numpy(),
-                                         metric).to(device)
+            P = self.joint_probabilities(
+                inputs.view(inputs.shape[0], -1).numpy(),
+                metric,
+            ).to(device)
             inputs = inputs.to(device)
             
             outputs = self.model(inputs)
@@ -46,14 +80,22 @@ class ParametricQSNE(object):
             loss.backward()
             self.optimizer.step()
     
-    def test(self, dataloader, device="cuda:0", metric="euclidean"):
+    
+    def test(
+        self,
+        dataloader,
+        device="cuda:0",
+        metric="euclidean",
+    ):
         device = torch.device(device)
         sum_loss = 0.
         
         self.model.eval()
         for (inputs, _) in tqdm(dataloader):
-            P = self.joint_probabilities(inputs.view(inputs.shape[0], -1).numpy(),
-                                         metric).to(device)
+            P = self.joint_probabilities(
+                inputs.view(inputs.shape[0], -1).numpy(),
+                metric,
+            ).to(device)
             inputs = inputs.to(device)
             
             outputs = self.model(inputs)
@@ -67,7 +109,13 @@ class ParametricQSNE(object):
         
         return sum_loss
     
-    def getOutputs(self, dataloader, based_labels=None, device="cuda:0"):
+    
+    def getOutputs(
+        self,
+        dataloader,
+        based_labels=None,
+        device="cuda:0",
+    ):
         if based_labels is None:
             based_labels = [str(x) for x in np.unique(labels)]
         data_dict = dict(zip(based_labels, [[] for i in range(len(based_labels))]))
@@ -85,16 +133,30 @@ class ParametricQSNE(object):
         return data_dict
             
             
-    def joint_probabilities(self, inputs, metric="euclidean", verbose=0):
+    def joint_probabilities(
+        self,
+        inputs,
+        metric="euclidean",
+        verbose=0,
+    ):
         if metric == "euclidean":
-            distances = pairwise_distances(inputs, metric=metric,
-                                           squared=True)
+            distances = pairwise_distances(
+                inputs,
+                metric=metric,
+                squared=True,
+            )
         else:
-            distances = pairwise_distances(X, metric=metric,
-                                            n_jobs=-1)
+            distances = pairwise_distances(
+                X,
+                metric=metric,
+                n_jobs=-1,
+            )
         distances = distances.astype(np.float32, copy=False)
         conditional_P = _utils._binary_search_perplexity(
-            distances, self.perp, verbose)
+            distances,
+            self.perp,
+            verbose,
+        )
         P = conditional_P + conditional_P.T
         sum_P = np.maximum(np.sum(P), 1e-8)
         P = np.maximum(P/sum_P, 1e-8).astype(np.float32)

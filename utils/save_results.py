@@ -5,7 +5,11 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import matplotlib.animation as anm
 from sklearn.neighbors import NearestNeighbors
 
-def saveInfo(info, filename="info"):
+
+def save_info(
+    info,
+    filename="info",
+):
     """
     Save the information to txt and csv file.
     Args:
@@ -25,7 +29,12 @@ def saveInfo(info, filename="info"):
             writer.writerow([k, v])
             
 
-def plotGraph(data_dict, y_lim=1.0, legend=True, filename='graph'):
+def plot_graph(
+    data_dict,
+    y_lim=1.0,
+    legend=True,
+    filename='graph',
+):
     """
     Plot graph.
     data_dict has label name and data.
@@ -42,20 +51,65 @@ def plotGraph(data_dict, y_lim=1.0, legend=True, filename='graph'):
 
     keys = data_dict.keys()
     for key in keys:
-        plt.plot(range(len(data_dict[key])),
-                 data_dict[key],
-                 label=key)
+        plt.plot(
+            range(len(data_dict[key])),
+            data_dict[key],
+            label=key,
+        )
     plt.ylim(0, y_lim)
     if legend:
-        plt.legend(bbox_to_anchor=(1.05, 1),
-                   loc='upper left',
-                   borderaxespad=0,
-                   ncol=1)
+        plt.legend(
+            bbox_to_anchor=(1.05, 1),
+            loc='upper left',
+            borderaxespad=0,
+            ncol=1,
+        )
+    plt.savefig(filename+".png", bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+    
+def plot_images(
+    images,
+    num_row,
+    num_col,
+    filename='images',
+):
+    """
+    show images.
+    e.g. of images:
+        images = [[ndarray1], [ndarray2], ...]
+    Args:
+        images (list of numpy image): images list
+        num_row (int): number of row
+        num_col (int): number of column
+        filename (str): output file name
+    """
+    fig,axes = plt.subplots(nrows=num_row,ncols=num_col,figsize=(10,8))
+    plt.subplots_adjust(wspace=0.0, hspace=0.0)
+    for i in range(num_row):
+        for j in range(num_col):
+            image = images[i*num_col+j]
+            image[image<0.] = 0.
+            if image.shape[-1] == 1:
+                axes[i,j].imshow(image, cmap="gray")
+            else:
+                axes[i,j].imshow(image)
+            axes[i,j].set_xticks([])
+            axes[i,j].set_yticks([])
     plt.savefig(filename+".png", bbox_inches='tight')
     plt.show()
     plt.close()
     
-def plotScatter(data_dict, alpha=0.5, s=5, legend=True, no_ticks=True, filename='scatter'):
+    
+def plot_scatter(
+    data_dict,
+    alpha=0.5,
+    s=5,
+    legend=True,
+    no_ticks=True,
+    filename='scatter',
+):
     """
     Plot scatter.
     data_dict has label name and 2d data.
@@ -74,16 +128,20 @@ def plotScatter(data_dict, alpha=0.5, s=5, legend=True, no_ticks=True, filename=
     
     keys = data_dict.keys()
     for key in keys:
-        plt.scatter(data_dict[key][:,0],
-                    data_dict[key][:,1],
-                    alpha=alpha,
-                    s=s,
-                    label=key)
+        plt.scatter(
+            data_dict[key][:,0],
+            data_dict[key][:,1],
+            alpha=alpha,
+            s=s,
+            label=key,
+        )
     if legend:
-        plt.legend(bbox_to_anchor=(1.05, 1),
-                   loc='upper left',
-                   borderaxespad=0,
-                   ncol=1)
+        plt.legend(
+            bbox_to_anchor=(1.05, 1),
+            loc='upper left',
+            borderaxespad=0,
+            ncol=1,
+        )
     if no_ticks:
         plt.xticks(color="None")
         plt.yticks(color="None")
@@ -92,38 +150,66 @@ def plotScatter(data_dict, alpha=0.5, s=5, legend=True, no_ticks=True, filename=
     plt.show()
     plt.close()
     
-def plotImScatter(data_dict, image_dict, alpha=0.7, zoom=0.3, no_ticks=True, filename='imScatter'):
+    
+def plot_im_scatter(
+    data_dict,
+    image_dict,
+    alpha=0.7,
+    zoom=0.3,
+    no_ticks=True,
+    filename='imScatter',
+    max_class_samples=None,
+):
     """
     Plot scatter with images.
-    data_dict has label name and 2d data.
+    The data_dict has label name and 2d data.
     e.g.:
         data_dict = {"label1":[2d ndarray],
                      "label2":[2d ndarray],...}
-    image_dict has label name and images. each images are corresponding to each data of data_dict.
+    The image_dict has label name and images. Each images are corresponding to each data of data_dict.
     e.g.:
         image_dict = {"label1":[image1-1, image1-2,...],
                       "label2":[image2-1, image2-2,...],...}
     Args:
-        data_dict (dict of list): data list. each data must be 2d. "key" denotes the information of data, "value" denotes the seaquence of data.
-        image_dict (dict of image list): image list. each image is numpy array. each images are corresponding to each data of data_dict.
+        data_dict (dict of list): Data list. Each data must be 2d.
+                The "key" denotes the information of data, "value" denotes the seaquence of data.
+        image_dict (dict of image list): Image list. Each image is numpy array.
+                Each images are corresponding to each data of data_dict.
         alpha (float): The alpha of plot
         zoom (float): Zoom of image
-        no_ticks (bool): no ticks. Default is True
-        filename (str): output file name
+        no_ticks (bool): No ticks. Defaults to True
+        filename (str): Output file name. Defaults to 'imScatter'.
+        max_class_samples (List[int], int or None): Max samples for visualization on each class. Defaults to None.
     """
+    if max_class_samples is None:
+        max_class_samples = []
+        for data in data_dict.values():
+            max_class_samples.append(len(data))
+    
+    if isinstance(max_class_samples, int):
+        max_class_samples = [max_class_samples]*len(data_dict)
+
+    assert len(max_class_samples) == len(data_dict),\
+    f'The size of max_class_samples and data_dict is difference. '\
+    f'max_class_samples is {len(max_class_samples)}, data_dict size is {len(data_dict)}.'
+    
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111)
     
     keys = data_dict.keys()
     num_classes = len(keys)
     for i, key in enumerate(keys):
-        for data, image in zip(data_dict[key], image_dict[key]):
-            im = OffsetImage(image,
-                             zoom=zoom)
-            ab = AnnotationBbox(im,
-                                (data[0], data[1]),
-                                xycoords="data",
-                                frameon=True)
+        for data, image in zip(data_dict[key][:max_class_samples[i]], image_dict[key][:max_class_samples[i]]):            
+            im = OffsetImage(
+                image,
+                zoom=zoom,
+            )
+            ab = AnnotationBbox(
+                im,
+                (data[0], data[1]),
+                xycoords="data",
+                frameon=True,
+            )
             ab.patch.set_edgecolor(cm.jet(i/num_classes))
             ax.add_artist(ab)
             ax.plot(data[0], data[1], alpha=0)
@@ -134,8 +220,60 @@ def plotImScatter(data_dict, image_dict, alpha=0.7, zoom=0.3, no_ticks=True, fil
     plt.savefig(filename+".png", bbox_inches='tight')
     plt.show()
     plt.close()
+        
     
-def plotWords(data_numpy, words, num_samples=5, base_word=None, filename="word"):
+def plot_histogram(
+    data_dict,
+    alpha=0.5,
+    bins=50,
+    ylim=500,
+    legend=True,
+    filename="histogram",
+):
+    """
+    Plot histogram.
+    data_dict has label name and data.
+    e.g.:
+        data_dict = {"label1":[1d ndarray],
+                     "label2":[1d ndarray],...}
+    Args:
+        data_dict (dict of list): data list. each data must be 1d. "key" denotes the information of data, "value" denotes the freaquency.
+        alpha (float): The alpha of histogram bin
+        bins (float): the number of bins
+        ylim (float): The limitation of y axis
+        legend (bool): on legends. Default is True
+        filename (str): output file name
+    """
+    plt.figure(figsize=(6, 6))
+    
+    keys = data_dict.keys()
+    for key in keys:
+        plt.hist(
+            data_dict[key],
+            alpha=alpha,
+            bins=bins,
+            label=key,
+        )
+    if legend:
+        plt.legend(
+            bbox_to_anchor=(1.05, 1),
+            loc='upper left',
+            borderaxespad=0,
+            ncol=1,
+        )
+    plt.ylim(0, ylim)
+    plt.savefig(filename+".png", bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+    
+def plot_words(
+    data_numpy,
+    words,
+    num_samples=5,
+    base_word=None,
+    filename="word",
+):
     """
     plor words.
     e.g.
@@ -168,12 +306,16 @@ def plotWords(data_numpy, words, num_samples=5, base_word=None, filename="word")
         nearest_words = []
         for k in range(num_samples):
             nearest_words.append(words[n[k]])
-            plt.scatter(data_n[k,0],
-                        data_n[k,1],
-                        alpha=0.0,
-                        color="black")
-            plt.annotate(words[n[k]],
-                         xy=(data_n[k,0], data_n[k,1]))
+            plt.scatter(
+                data_n[k,0],
+                data_n[k,1],
+                alpha=0.0,
+                color="black",
+            )
+            plt.annotate(
+                words[n[k]],
+                xy=(data_n[k,0], data_n[k,1]),
+            )
         detected_words.append(nearest_words)
             
     plt.savefig(filename+".png", bbox_inches='tight')

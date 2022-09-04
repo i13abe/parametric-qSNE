@@ -4,7 +4,8 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from tqdm import tqdm
 
-def torch2NumpyImage(torch_data):
+
+def torch_to_numpy_image(torch_data):
     """
     Translate the torch tensor to numpy image.
     Args:
@@ -21,7 +22,8 @@ def torch2NumpyImage(torch_data):
         images.append(image)
     return images
 
-def dimReductionPCA(fit_data, test_data=None, dim=2, pca=None):
+
+def dim_reduction_PCA(fit_data, test_data=None, dim=2, pca=None):
     """
     Dimensionality Reduction by PCA
     Args:
@@ -47,7 +49,8 @@ def dimReductionPCA(fit_data, test_data=None, dim=2, pca=None):
         
     return fit_results, test_results, pca
     
-def dict2PCA(fit_dict, test_dict=None, dim=2, pca=None):
+    
+def dict_to_PCA(fit_dict, test_dict=None, dim=2, pca=None):
     """
     Dimensionality Reduction by PCA with dict data
     example of dict data is below:
@@ -84,7 +87,7 @@ def dict2PCA(fit_dict, test_dict=None, dim=2, pca=None):
     else:
         test_data = None
     
-    fit_results, test_results, pca = dimReductionPCA(fit_data, test_data, dim, pca)
+    fit_results, test_results, pca = dim_reduction_PCA(fit_data, test_data, dim, pca)
     
     fit_results_dict = {}
     for i, key in tqdm(enumerate(dict_name)):
@@ -99,7 +102,39 @@ def dict2PCA(fit_dict, test_dict=None, dim=2, pca=None):
     
     return fit_results_dict, test_results_dict, pca
 
-def numpy2dict(data_numpy, labels, based_labels=None):
+
+def dict_to_oneVSothers(data_dict, num_class=0):
+    """
+    Get the one class neurons of num_class and other class neurons from data_dict.
+    example is below where "num_class=0":
+        data_dict = {"class1":[[a,b,b,b],[a,b,b,b],...],
+                     "class2":[[c,d,d,d],[c,d,d,d],...]
+                     "class3":[[e,f,f,f],[e,f,f,f],...],...}
+        
+        => results = {"num_class":[a,a,a,a,...],
+                      "others":[c,c,c,...e,e,e,...]}
+    Args:
+        data_dict (dict of 2d ndarray): dict of 2-d numpy array
+        num_class (int): number of class to get
+    Returns:
+        results (dict of 2d ndarray): dict of 2-d numpy array
+    """
+    results = {}
+    one_data = []
+    other_data = []
+    for i, items in enumerate(zip(data_dict.items())):
+        key, item = items[0]
+        if i==num_class:
+            one_data.append(item[:, num_class])
+        else:
+            other_data.append(item[:, num_class])
+            
+    results[str(num_class)] = np.hstack(one_data)
+    results["others"] = np.hstack(other_data)
+    return results
+
+
+def numpy_to_dict(data_numpy, labels, based_labels=None):
     """
     Get the label dict from numpy.
     example is below
@@ -217,7 +252,8 @@ def _binary_search_perplexity(sqdistances, desired_perplexity, verbose):
 
     return P
 
-def kNearestNeighbors(fit_data, labels, k, kNN=None):
+
+def k_nearest_neighbors(fit_data, labels, k, kNN=None):
     """
     Get the scores by kNN.
     Args:
@@ -236,7 +272,8 @@ def kNearestNeighbors(fit_data, labels, k, kNN=None):
     score = kNN.score(fit_data, labels)
     return score, kNN
 
-def dict2kNN(fit_dict, k, kNN=None):
+
+def dict_to_kNN(fit_dict, k, kNN=None):
     """
     k nearest neighbors by kNN with dict data
     example of dict data is below:
@@ -259,5 +296,5 @@ def dict2kNN(fit_dict, k, kNN=None):
     labels = np.hstack(labels)
     fit_data = np.vstack(items)
     
-    score, kNN = kNearestNeighbors(fit_data, labels, k, kNN)
+    score, kNN =  k_nearest_neighbors(fit_data, labels, k, kNN)
     return score, kNN

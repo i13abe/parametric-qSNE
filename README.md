@@ -38,9 +38,9 @@ Install the pytorch which is suitable for your enviroment.
 https://pytorch.org/
 
 # How to use the parametric q-SNE
-We provide the demo.ipynb to run demonstrate on MNIST.
+We provide the parametriic_qsne.ipynb to run demonstrate on MNIST.
 If you can use jupyter notebook or jupter lab, please use this demonstrate file.
-If you can not use jupyter, please make the python file while referring demo.ipynb.
+If you can not use jupyter, please make the python file while referring parametriic_qsne.ipynb.
 Before run it, following step is required.
 
 - compile the "_utils.pyx"
@@ -56,7 +56,7 @@ $ python setup.py build_ext --inplace
 
 - Run tips
 Our implementation parametric q-SNE can use any CNN, e.g. VGG, ResNet etc.
-In our demo.ipynb, we use small CNN prepared in utils.networks.py.
+In our parametric_qsne.ipynb, we use small CNN prepared in utils.networks.py.
 If you want to use them, please rewrite the calling sentence of network.
 The parametric q-SNE requires larger mini-batch size.
 The larger mini-batch size, the better results we get.
